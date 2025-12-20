@@ -1137,10 +1137,9 @@
         function selectDifficulty(difficulty) {
             gameState.difficulty = difficulty;
             
-            // Update button states with smooth animation
-            document.querySelectorAll('.difficulty-btn').forEach(btn => {
-                btn.classList.remove('selected');
-            });
+            document.querySelectorAll('.difficulty-btn:not(.theme-btn)').forEach(btn => {
+    btn.classList.remove('selected');
+});
             
             const selectedBtn = document.querySelector(`[data-difficulty="${difficulty}"]`);
             selectedBtn.classList.add('selected');
@@ -1151,18 +1150,18 @@
             startBtn.style.animation = 'buttonGlow 1s ease-in-out';
         }
 
-        // Theme selection function (MISSING - ADD THIS!)
-        function selectTheme(theme) {
-            selectedTheme = theme;
-            
-            const themeButtons = document.querySelectorAll('.theme-btn');
-            themeButtons.forEach(btn => btn.classList.remove('selected'));
-            
-            const selectedBtn = document.querySelector(`.theme-btn[data-theme="${theme}"]`);
-            if (selectedBtn) {
-                selectedBtn.classList.add('selected');
-            }
-        }
+        // Theme selection function
+function selectTheme(theme) {
+    selectedTheme = theme;
+    
+    const themeButtons = document.querySelectorAll('.theme-btn');
+    themeButtons.forEach(btn => btn.classList.remove('selected'));
+    
+    const selectedBtn = document.querySelector(`.theme-btn[data-theme="${theme}"]`);
+    if (selectedBtn) {
+        selectedBtn.classList.add('selected');
+    }
+}
 
         // Enhanced game start - FIXED (no auto-music)
         function startGame() {
@@ -1406,7 +1405,10 @@
             // Animate number changes
             animateNumberChange(moveElement, gameState.moves);
             animateNumberChange(matchElement, gameState.matches);
-            animateNumberChange(timeElement, gameState.timeLeft);
+            const minutes = Math.floor(gameState.timeLeft / 60);
+const seconds = gameState.timeLeft % 60;
+const timeFormatted = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+animateNumberChange(timeElement, timeFormatted);
         }
 
         function animateNumberChange(element, newValue) {
@@ -1556,13 +1558,11 @@ document.querySelector('.play-button').addEventListener('click', function primeO
     document.querySelector('.play-button').removeEventListener('click', primeOnce);
 });
 
-// Initialize default selections
+
+        // Initialize default selections
         document.addEventListener('DOMContentLoaded', () => {
             // Set fruits as default selected theme
-            const fruitsBtn = document.querySelector('.theme-btn[data-theme="fruits"]');
-            if (fruitsBtn) {
-                fruitsBtn.classList.add('selected');
-            }
+            selectTheme('fruits');  // Use the selectTheme function to ensure consistency
         });
     </script>
     <script src="game.js"></script>
