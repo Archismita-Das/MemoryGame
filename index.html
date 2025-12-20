@@ -952,21 +952,21 @@
     </div>
 
     <!-- Game Over Modal -->
-    <div class="modal" id="gameModal">
-        <div class="modal-content">
-            <div class="congrats-message" id="congratsMessage" style="display:none;">
-                <span class="congrats-emoji">🎉🏆</span>
-                <span class="congrats-text">Congratulations!</span>
-                <span class="congrats-emoji">🏆🎉</span>
-            </div>
-            <h2 class="modal-title" id="modalTitle">Game Over!</h2>
-            <p id="modalMessage">Great job! You completed the game.</p>
-            <div class="modal-buttons">
-                <button class="modal-btn primary" onclick="restartGame()">Play Again ✨</button>
-                <button class="modal-btn secondary" onclick="showMenu()">Main Menu</button>
-            </div>
+<div class="modal" id="gameModal">
+    <div class="modal-content">
+        <div class="congrats-message" id="congratsMessage" style="display:none;">
+            <span class="congrats-emoji">🎉🏆</span>
+            <span class="congrats-text">Congratulations!</span>
+            <span class="congrats-emoji">🏆🎉</span>
+        </div>
+        <h2 class="modal-title" id="modalTitle">Game Over!</h2>
+        <p id="modalMessage" style="font-size: 1.2rem; margin-top: 1rem;">Great job! You completed the game.</p>
+        <div class="modal-buttons">
+            <button class="modal-btn primary" onclick="restartGame()">Play Again ✨</button>
+            <button class="modal-btn secondary" onclick="showMenu()">Main Menu</button>
         </div>
     </div>
+</div>
 
     <!-- Audio Elements -->
     <audio id="backgroundMusic" loop src="audio/background music.mp3"></audio>
@@ -1086,11 +1086,23 @@
 
         function showMenu() {
             showScreen('menuScreen');
-            if (gameState.gameActive) {
-                pauseGame();
+            
+            // Clear timer if exists
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+                gameState.timer = null;
             }
+            
+            // Reset pause state completely
+            gameState.isPaused = false;
+            gameState.gameActive = false;
+            
+            // Reset pause UI
+            const pauseOverlay = document.getElementById('pauseOverlay');
+            const pauseBtn = document.getElementById('pauseBtn');
+            if (pauseOverlay) pauseOverlay.classList.remove('active');
+            if (pauseBtn) pauseBtn.textContent = '⏸ Pause';
         }
-
         // Enhanced theme toggle with smooth transitions
         function toggleTheme() {
             gameState.darkMode = !gameState.darkMode;
@@ -1104,7 +1116,7 @@
             createSparkleEffect();
         }
 
-        // Enhanced music toggle
+        // Enhanced music toggle - FIXED VERSION
         function toggleMusic() {
             gameState.musicEnabled = !gameState.musicEnabled;
             const musicToggle = document.getElementById('musicToggle');
@@ -1117,6 +1129,7 @@
                 backgroundMusic.play().catch(e => console.log('Audio play failed:', e));
             } else {
                 backgroundMusic.pause();
+                backgroundMusic.currentTime = 0;
             }
         }
 
@@ -1138,7 +1151,20 @@
             startBtn.style.animation = 'buttonGlow 1s ease-in-out';
         }
 
-        // Enhanced game start
+        // Theme selection function (MISSING - ADD THIS!)
+        function selectTheme(theme) {
+            selectedTheme = theme;
+            
+            const themeButtons = document.querySelectorAll('.theme-btn');
+            themeButtons.forEach(btn => btn.classList.remove('selected'));
+            
+            const selectedBtn = document.querySelector(`.theme-btn[data-theme="${theme}"]`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('selected');
+            }
+        }
+
+        // Enhanced game start - FIXED (no auto-music)
         function startGame() {
             if (!gameState.difficulty) return;
 
@@ -1146,25 +1172,35 @@
             setTimeout(() => {
                 showScreen('gameScreen');
                 initializeGame();
-
-                // Start background music automatically
-                const backgroundMusic = document.getElementById('backgroundMusic');
-                if (backgroundMusic && !gameState.musicEnabled) {
-                    backgroundMusic.volume = 0.1;
-                    backgroundMusic.play().catch(e => console.log('Audio play failed:', e));
-                    gameState.musicEnabled = true;
-                    document.getElementById('musicToggle').classList.add('active');
-                }
+                // Music only plays if user toggled it on - no auto-start
             }, 500);
         }
 
-        // Enhanced game initialization
         function initializeGame() {
+            // Clear any existing timer first
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+                gameState.timer = null;
+            }
+            
+            // Reset pause overlay and button
+            const pauseOverlay = document.getElementById('pauseOverlay');
+            const pauseBtn = document.getElementById('pauseBtn');
+            if (pauseOverlay) pauseOverlay.classList.remove('active');
+            if (pauseBtn) pauseBtn.textContent = '⏸ Pause';
+            
             gameState.gameActive = true;
             gameState.moves = 0;
             gameState.matches = 0;
             gameState.flippedCards = [];
             gameState.matchedPairs = 0;
+            gameState.isPaused = false;      // Reset pause state
+            gameState.revealUsed = false;
+            revealUsed = false;  // Reset the global revealUsed variable from game.js
+            
+            // Enable reveal button
+            const revealBtn = document.getElementById('revealBtn');
+            if (revealBtn) revealBtn.disabled = false;
             
             // Enhanced difficulty settings
             const difficultySettings = {
@@ -1188,7 +1224,9 @@
             gameGrid.className = `game-grid ${gridClass}`;
             gameGrid.innerHTML = '';
             
-            const emojis = cardEmojis[gameState.difficulty].slice(0, pairs);
+            // Use selected theme from emojiThemes (from game.js)
+            const themeEmojis = emojiThemes[selectedTheme];
+            const emojis = themeEmojis.slice(0, pairs);
             const cards = [...emojis, ...emojis];
             
             // Enhanced shuffle algorithm
@@ -1327,6 +1365,12 @@
 
         // Enhanced timer with visual feedback
         function startTimer() {
+            // Clear any existing timer first
+            if (gameState.timer) {
+                clearInterval(gameState.timer);
+                gameState.timer = null;
+            }
+            
             gameState.timer = setInterval(() => {
                 gameState.timeLeft--;
                 updateGameStats();
@@ -1339,6 +1383,8 @@
                 }
                 
                 if (gameState.timeLeft <= 0) {
+                    clearInterval(gameState.timer);
+                    gameState.timer = null;
                     loseGame();
                 }
             }, 1000);
@@ -1348,9 +1394,9 @@
             gameState.gameActive = false;
             if (gameState.timer) {
                 clearInterval(gameState.timer);
+                gameState.timer = null;
             }
         }
-
         // Enhanced stats update with smooth animations
         function updateGameStats() {
             const moveElement = document.getElementById('moveCount');
@@ -1364,11 +1410,8 @@
         }
 
         function animateNumberChange(element, newValue) {
-            element.style.transform = 'scale(1.2)';
+            // Don't animate anything - just update the text
             element.textContent = newValue;
-            setTimeout(() => {
-                element.style.transform = 'scale(1)';
-            }, 200);
         }
 
         // Enhanced win game with spectacular effects
@@ -1389,32 +1432,34 @@
         }
      
         // Enhanced game modal
-        function showGameModal(won) {
-            const modal = document.getElementById('gameModal');
-            const title = document.getElementById('modalTitle');
-            const message = document.getElementById('modalMessage');
-            const congrats = document.getElementById('congratsMessage');
-            
-            if (won) {
-                title.textContent = '🎉 Spectacular!';
-                title.className = 'modal-title win';
-                message.textContent = `Amazing performance! You completed the game in ${gameState.moves} moves with ${gameState.timeLeft} seconds remaining!`;
-                congrats.style.display = 'flex';
-                setTimeout(() => {
-                    congrats.classList.add('animate');
-                }, 100);
-                startEmojiRain(); // <-- Add this line
-            } else {
-                title.textContent = '⏰ Time\'s Up!';
-                title.className = 'modal-title lose';
-                message.textContent = `Great effort! You made ${gameState.matches} matches. Try again to beat your score!`;
-                congrats.style.display = 'none';
-                congrats.classList.remove('animate');
-                document.getElementById('emojiRain').innerHTML = '';
-            }
-            
-            modal.classList.add('active');
-        }
+// Enhanced game modal
+function showGameModal(won) {
+    const modal = document.getElementById('gameModal');
+    const title = document.getElementById('modalTitle');
+    const message = document.getElementById('modalMessage');
+    const congrats = document.getElementById('congratsMessage');
+    
+    if (won) {
+        title.style.display = 'block';  // Show the title
+        title.textContent = 'You Win!';  // Simple title
+        title.className = 'modal-title win';
+        message.textContent = `Great job! You completed the game in ${gameState.moves} moves.`;
+        congrats.style.display = 'none';  // Hide the big congratulations
+        congrats.classList.remove('animate');
+        startEmojiRain(); // Keep the emoji rain effect
+    } else {
+        title.style.display = 'block';
+        title.textContent = '⏰ Time\'s Up!';
+        title.className = 'modal-title lose';
+        message.textContent = `Great effort! You made ${gameState.matches} matches. Try again to beat your score!`;
+        congrats.style.display = 'none';
+        congrats.classList.remove('animate');
+        const rain = document.getElementById('emojiRain');
+        if (rain) rain.innerHTML = '';
+    }
+    
+    modal.classList.add('active');
+}
 
         // Spectacular confetti for wins
         function createSpectacularConfetti() {
@@ -1446,7 +1491,19 @@
 
         // Enhanced restart game
         function restartGame() {
-            document.getElementById('gameModal').classList.remove('active');
+            const modal = document.getElementById('gameModal');
+            const congrats = document.getElementById('congratsMessage');
+            
+            modal.classList.remove('active');
+            if (congrats) {
+                congrats.classList.remove('animate');
+                congrats.style.display = 'none';
+            }
+            
+            // Clear emoji rain
+            const rain = document.getElementById('emojiRain');
+            if (rain) rain.innerHTML = '';
+            
             createSparkleEffect();
             setTimeout(() => {
                 initializeGame();
@@ -1498,6 +1555,15 @@ document.querySelector('.play-button').addEventListener('click', function primeO
     // Remove this event after first run to avoid repeated priming
     document.querySelector('.play-button').removeEventListener('click', primeOnce);
 });
+
+// Initialize default selections
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set fruits as default selected theme
+            const fruitsBtn = document.querySelector('.theme-btn[data-theme="fruits"]');
+            if (fruitsBtn) {
+                fruitsBtn.classList.add('selected');
+            }
+        });
     </script>
     <script src="game.js"></script>
 
