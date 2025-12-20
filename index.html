@@ -1085,6 +1085,9 @@
         }
 
         function showMenu() {
+
+            // Add this line first:
+             document.getElementById('gameModal').classList.remove('active');
             showScreen('menuScreen');
             
             // Clear timer if exists
