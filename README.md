@@ -158,8 +158,8 @@ Contributions, issues, and feature requests are welcome!
 
 ## 👩‍💻 Author
 
-**Anindita**
-- GitHub: [@anindita-19](https://github.com/anindita-19)
+**Archismita**
+- GitHub: https://github.com/Archismita-Das
 
 ## 📝 License
 
