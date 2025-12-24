@@ -175,8 +175,8 @@ This project is open source and available under the [MIT License](LICENSE).
 
 If you like this project, please give it a ⭐ on GitHub!
 
-For issues or questions, please open an issue on the [GitHub repository](https://github.com/anindita-19/memory-flip-game/issues).
+
 
 ---
 
-Made with ❤️ by Anindita | 2025
+Made with ❤️ by Archismita | 2025
